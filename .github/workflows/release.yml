@@ -4,9 +4,14 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to release, e.g. v0.1.0-beta.1"
+        required: true
+        type: string
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release-${{ github.ref }}
@@ -17,24 +22,65 @@ env:
   CARGO_INCREMENTAL: "0"
 
 jobs:
+  verify:
+    name: Verify tag and version
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.check.outputs.tag }}
+      version: ${{ steps.check.outputs.version }}
+      prerelease: ${{ steps.check.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Validate tag and Cargo version
+        id: check
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="${GITHUB_REF_NAME}"
+          fi
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)\.[0-9]+)?$ ]]; then
+            echo "::error::Invalid release tag '$tag'. Use vMAJOR.MINOR.PATCH[-beta.N|-rc.N|-alpha.N]"
+            exit 1
+          fi
+          version="${tag#v}"
+          manifest_version=$(cargo metadata --no-deps --format-version 1 \
+            | python3 -c 'import json,sys; print(next(p["version"] for p in json.load(sys.stdin)["packages"] if p["name"]=="cftool"))')
+          if [ "$version" != "$manifest_version" ]; then
+            echo "::error::Tag $tag disagrees with crate version $manifest_version"
+            exit 1
+          fi
+          if [[ "$tag" == *-* ]]; then prerelease=true; else prerelease=false; fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+          echo "Verified $tag (version $version, prerelease=$prerelease)"
+
   build:
     name: Build (${{ matrix.target }})
+    needs: verify
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
-            archive: cftool-linux-x86_64.tar.gz
+            archive: cftool-${{ needs.verify.outputs.tag }}-linux-x86_64.tar.gz
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            archive: cftool-windows-x86_64.zip
+            archive: cftool-${{ needs.verify.outputs.tag }}-windows-x86_64.zip
           - os: macos-15
             target: aarch64-apple-darwin
-            archive: cftool-macos-aarch64.tar.gz
+            archive: cftool-${{ needs.verify.outputs.tag }}-macos-aarch64.tar.gz
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.verify.outputs.tag }}
       - name: Install Linux GUI dependencies
         if: runner.os == 'Linux'
         run: |
@@ -55,10 +101,12 @@ jobs:
       - name: Package (Unix)
         if: runner.os != 'Windows'
         run: |
+          set -euo pipefail
           mkdir -p dist
           cp target/${{ matrix.target }}/release/cftool dist/
           cp target/${{ matrix.target }}/release/cftool-gui dist/
-          tar -czf ${{ matrix.archive }} -C dist cftool cftool-gui
+          tar -czf "${{ matrix.archive }}" -C dist cftool cftool-gui
+          sha256sum "${{ matrix.archive }}" > "${{ matrix.archive }}.sha256"
       - name: Package (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -66,24 +114,45 @@ jobs:
           New-Item -ItemType Directory -Force dist | Out-Null
           Copy-Item target/${{ matrix.target }}/release/cftool.exe dist/
           Copy-Item target/${{ matrix.target }}/release/cftool-gui.exe dist/
-          Compress-Archive -Path dist/cftool.exe, dist/cftool-gui.exe -DestinationPath ${{ matrix.archive }}
+          Compress-Archive -Path dist/cftool.exe, dist/cftool-gui.exe -DestinationPath "${{ matrix.archive }}"
+          (Get-FileHash -Algorithm SHA256 "${{ matrix.archive }}").Hash.ToLower() + "  ${{ matrix.archive }}" | Out-File -Encoding ascii "${{ matrix.archive }}.sha256"
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.target }}
-          path: ${{ matrix.archive }}
+          path: |
+            ${{ matrix.archive }}
+            ${{ matrix.archive }}.sha256
           if-no-files-found: error
 
   publish:
     name: Publish release
-    needs: build
+    needs: [verify, build]
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v8
         with:
           path: artifacts
           merge-multiple: true
+      - name: Assemble checksum manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd artifacts
+          cat *.sha256 > SHA256SUMS
+          rm *.sha256
+          cat SHA256SUMS
       - uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/*
+          tag_name: ${{ needs.verify.outputs.tag }}
+          name: cftool ${{ needs.verify.outputs.version }}
+          prerelease: ${{ needs.verify.outputs.prerelease == 'true' }}
+          make_latest: ${{ needs.verify.outputs.prerelease == 'false' && 'true' || 'false' }}
           generate_release_notes: true
+          body: |
+            ${{ needs.verify.outputs.prerelease == 'true' && '> **Pre-release.** Use for testing only.' || '' }}
+            Verify downloads with `sha256sum -c SHA256SUMS`.
+          files: |
+            artifacts/*
           fail_on_unmatched_files: true
