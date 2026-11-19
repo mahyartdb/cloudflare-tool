@@ -67,7 +67,7 @@ jobs:
           Copy-Item target/${{ matrix.target }}/release/cftool.exe dist/
           Copy-Item target/${{ matrix.target }}/release/cftool-gui.exe dist/
           Compress-Archive -Path dist/cftool.exe, dist/cftool-gui.exe -DestinationPath ${{ matrix.archive }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.target }}
           path: ${{ matrix.archive }}
