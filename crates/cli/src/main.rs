@@ -338,18 +338,14 @@ async fn run_scan(
     #[cfg(feature = "mock")]
     let plan = {
         let mut plan = plan;
-        if let Some(path) = matches.get_one::<String>("mock") {
-            match cftool_core::mock::load_script(path).and_then(|script| {
+        if let Some(path) = matches.get_one::<String>("mock")
+            && let Err(error) = cftool_core::mock::load_script(path).map(|script| {
                 mock_targets = Some(script.targets.clone());
                 cftool_core::mock::apply_script(&mut plan, &script);
-                Ok(())
-            }) {
-                Ok(()) => {}
-                Err(error) => {
-                    eprintln!("error: {error}");
-                    return 1;
-                }
-            }
+            })
+        {
+            eprintln!("error: {error}");
+            return 1;
         }
         plan
     };

@@ -5,6 +5,7 @@ members = ["crates/core", "crates/modules/warp", "crates/modules/cdn", "crates/c
 [workspace.package]
 edition = "2024"
 rust-version = "1.97"
+license = "MIT"
 
 [workspace.dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "sync", "time", "signal"] }

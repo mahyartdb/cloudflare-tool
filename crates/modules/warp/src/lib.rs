@@ -20,8 +20,8 @@ use tokio_util::sync::CancellationToken;
 pub use finding::WarpFinding;
 pub use identity::{Identity, WarpError, delete_identity, parse_wgcf};
 pub use options::{
-    COLUMNS, IDENTITY_DIALOG, IDENTITY_SUBCOMMANDS, NoisePreset, OPTIONS_SPEC, PORTS_FULL,
-    PORTS_STANDARD, PoolMode, PortMode, WarpOptions,
+    COLUMNS, IDENTITY_DIALOG, IDENTITY_SUBCOMMANDS, NoisePreset, OPTIONS_SPEC, PINNED_PORT,
+    PORTS_FULL, PORTS_STANDARD, PoolMode, PortMode, WarpOptions,
 };
 pub use plan::{Lcg, build_plan, default_plan_for_test, lcg_walk24, ports_for};
 pub use probe::{WarpProbe, classify_response, decode_key, derive_wire_index};
