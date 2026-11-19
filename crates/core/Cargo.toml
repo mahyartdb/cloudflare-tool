@@ -1,0 +1,22 @@
+[package]
+name = "cftool-core"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+ipnet = { workspace = true }
+time = { workspace = true }
+rand = { workspace = true }
+
+[features]
+mock = []
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }

@@ -1,0 +1,35 @@
+[workspace]
+resolver = "2"
+members = ["crates/core", "crates/modules/warp", "crates/modules/cdn", "crates/cli", "crates/gui"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.97"
+
+[workspace.dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "sync", "time", "signal"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+anyhow = "1"
+ipnet = { version = "2", features = ["serde"] }
+time = { version = "0.3", features = ["serde", "formatting", "parsing"] }
+rand = "0.9"
+boringtun = "0.7.1"
+reqwest = { version = "0.13.5", features = ["json", "rustls"] }
+base64 = "0.23"
+dirs = "7"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+webpki-roots = "1"
+rand_core_06 = { package = "rand_core", version = "0.6", features = ["getrandom"] }
+
+[profile.dev]
+debug = 0
+
+[profile.test]
+debug = 0
+
+[profile.release]
+lto = "thin"
+strip = true

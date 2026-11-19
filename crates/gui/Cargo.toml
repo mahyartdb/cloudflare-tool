@@ -1,0 +1,21 @@
+[package]
+name = "cftool-gui"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+cftool-core = { path = "../core" }
+cftool-warp = { path = "../modules/warp" }
+cftool-cdn = { path = "../modules/cdn" }
+cftool = { path = "../cli" }
+gpui-kit = "0.9.1"
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+time = { workspace = true }
+
+[features]
+mock = ["cftool-core/mock", "cftool-warp/mock", "cftool/mock"]

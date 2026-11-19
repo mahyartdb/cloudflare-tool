@@ -1,0 +1,16 @@
+# Build artifacts
+/target/
+*.pdb
+*.ilk
+*.exp
+*.lib
+
+# Local credentials and configuration
+identity.json
+cftool.toml
+
+# Editor/OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

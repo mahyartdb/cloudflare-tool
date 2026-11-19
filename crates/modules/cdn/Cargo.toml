@@ -1,0 +1,23 @@
+[package]
+name = "cftool-cdn"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+cftool-core = { path = "../../core" }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+ipnet = { workspace = true }
+time = { workspace = true }
+rand = { workspace = true }
+reqwest = { workspace = true }
+rustls = { workspace = true }
+webpki-roots = { workspace = true }
+
+[features]
+mock = ["cftool-core/mock"]
