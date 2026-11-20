@@ -7,8 +7,14 @@ version = "0.1.0-beta.1"
 edition = "2024"
 rust-version = "1.97"
 license = "MIT"
+description = "Cloudflare WARP and CDN endpoint scanner toolkit"
+repository = "https://github.com/mahyartdb/cloudflare-tool"
 
 [workspace.dependencies]
+cftool-core = { version = "0.1.0-beta.1", path = "crates/core" }
+cftool-warp = { version = "0.1.0-beta.1", path = "crates/modules/warp" }
+cftool-cdn = { version = "0.1.0-beta.1", path = "crates/modules/cdn" }
+cftool = { version = "0.1.0-beta.1", path = "crates/cli" }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "sync", "time", "signal"] }
 tokio-util = { version = "0.7", features = ["rt"] }
 serde = { version = "1", features = ["derive"] }

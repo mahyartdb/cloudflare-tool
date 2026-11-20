@@ -4,6 +4,8 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
+description.workspace = true
+repository.workspace = true
 
 [lib]
 name = "cftool_cli"
@@ -14,9 +16,9 @@ name = "cftool"
 path = "src/main.rs"
 
 [dependencies]
-cftool-core = { path = "../core" }
-cftool-warp = { path = "../modules/warp" }
-cftool-cdn = { path = "../modules/cdn" }
+cftool-core = { workspace = true }
+cftool-warp = { workspace = true }
+cftool-cdn = { workspace = true }
 tokio = { workspace = true }
 tokio-util = { workspace = true }
 serde = { workspace = true }

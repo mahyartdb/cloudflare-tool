@@ -57,3 +57,59 @@ Releases by hand.
   existing valid tag; the same version checks apply.
 - Verify a downloaded archive with `sha256sum -c SHA256SUMS` (or `Get-FileHash`
   on Windows) before trusting it.
+
+## Publishing to crates.io
+
+crates.io publishing is **opt-in and separate** from GitHub releases. It is done
+only by the `crates` job in `.github/workflows/release.yml`, never by hand from a
+developer machine for a release (use `cargo login` locally only for manual,
+out-of-band publishes).
+
+### Authentication
+
+- Never commit a token, put one in a command line, or paste one into chat.
+- **CI**: repository secret `CARGO_REGISTRY_TOKEN`. The workflow passes it to
+  `cargo publish` via environment variable; it is masked in logs.
+- **Local (optional)**: `cargo login` stores a token in
+  `~/.cargo/credentials.toml` (Windows: `%USERPROFILE%\.cargo\credentials.toml`).
+  `cargo logout` removes it. This file is outside the repo and must never be
+  added to it.
+- To revoke a leaked token, delete it at https://crates.io/settings/tokens
+  immediately.
+
+### Enabling the publish job
+
+The `crates` job is gated by the repository variable `PUBLISH_TO_CRATES_IO`.
+It does nothing until that variable is the string `true`:
+
+```sh
+gh variable set PUBLISH_TO_CRATES_IO --repo mahyartdb/cloudflare-tool --body true
+```
+
+Set it only when you intend the next tag to publish. Leave it unset/`false`
+otherwise. The job may be safely re-run: it skips versions already on crates.io.
+
+### Manifest requirements (already in place — keep them)
+
+- The workspace version is the single source of truth in
+  `[workspace.package].version`; members inherit it with `version.workspace = true`.
+- Every internal dependency is declared in `[workspace.dependencies]` with both
+  `version` (matching the workspace version) and `path`; members use
+  `{ workspace = true }`. Cargo publish requires a version requirement on every
+  path dependency — removing it breaks publishing.
+- Every crate inherits `description` and `repository` from the workspace;
+  crates.io requires these.
+
+### Publish order and rules
+
+- The `crates` job publishes in dependency order:
+  `cftool-core` → `cftool-warp` → `cftool-cdn` → `cftool` → `cftool-gui`,
+  retrying until each new version is indexed before publishing its dependents.
+- A publish is permanent: a version can never be overwritten or deleted. Fix a
+  broken release with a new version (bump `N`, e.g. `-beta.2`), never a repush.
+- `cargo yank --version X.Y.Z` hides a broken version from new dependency
+  resolution but does not delete code.
+- Local verification before a real publish: `cargo publish --dry-run -p <crate>`.
+  Note that crates with internal dependencies cannot pass a full dry run until
+  those dependencies exist on crates.io; that is expected and not a failure of
+  the local manifest.

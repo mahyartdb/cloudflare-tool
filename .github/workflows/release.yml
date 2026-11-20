@@ -156,3 +156,58 @@ jobs:
           files: |
             artifacts/*
           fail_on_unmatched_files: true
+
+  crates:
+    name: Publish to crates.io
+    needs: [verify, publish]
+    if: ${{ vars.PUBLISH_TO_CRATES_IO == 'true' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.verify.outputs.tag }}
+      - name: Install Linux GUI dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc g++ clang pkg-config cmake \
+            libfontconfig-dev libwayland-dev libwebkit2gtk-4.1-dev \
+            libxkbcommon-x11-dev libx11-xcb-dev libssl-dev libzstd-dev \
+            libasound2-dev vulkan-validationlayers libvulkan1
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Publish crates in dependency order
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ needs.verify.outputs.version }}"
+
+          published() {
+            curl --fail --silent --show-error -o /dev/null \
+              "https://crates.io/api/v1/crates/$1/$version"
+          }
+
+          publish() {
+            local crate="$1"
+            if published "$crate"; then
+              echo "::notice::$crate $version already on crates.io; skipping"
+              return 0
+            fi
+            local deadline=$((SECONDS + 900))
+            until cargo publish -p "$crate" --locked || published "$crate"; do
+              if (( SECONDS >= deadline )); then
+                echo "::error::timed out waiting to publish $crate $version"
+                return 1
+              fi
+              echo "::notice::waiting for crates.io index propagation before retrying $crate"
+              sleep 30
+            done
+          }
+
+          publish cftool-core
+          publish cftool-warp
+          publish cftool-cdn
+          publish cftool
+          publish cftool-gui
