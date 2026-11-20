@@ -186,6 +186,7 @@ jobs:
 
           published() {
             curl --fail --silent --show-error -o /dev/null \
+              --user-agent "cftool-release-ci/$version" \
               "https://crates.io/api/v1/crates/$1/$version"
           }
 
@@ -195,15 +196,34 @@ jobs:
               echo "::notice::$crate $version already on crates.io; skipping"
               return 0
             fi
+            local output status=0
+            output=$(cargo publish -p "$crate" --locked 2>&1) || status=$?
+            if [ "$status" -eq 0 ] || published "$crate"; then
+              printf '%s\n' "$output"
+              return 0
+            fi
+            if ! grep -qiE 'not found|no matching package|unresolved|failed to select' <<<"$output"; then
+              printf '%s\n' "$output"
+              echo "::error::crates.io rejected $crate $version; not retrying a permanent error"
+              return 1
+            fi
             local deadline=$((SECONDS + 900))
-            until cargo publish -p "$crate" --locked || published "$crate"; do
-              if (( SECONDS >= deadline )); then
-                echo "::error::timed out waiting to publish $crate $version"
-                return 1
-              fi
+            while (( SECONDS < deadline )); do
               echo "::notice::waiting for crates.io index propagation before retrying $crate"
               sleep 30
+              output=$(cargo publish -p "$crate" --locked 2>&1) || status=$?
+              if [ "$status" -eq 0 ] || published "$crate"; then
+                printf '%s\n' "$output"
+                return 0
+              fi
+              if ! grep -qiE 'not found|no matching package|unresolved|failed to select' <<<"$output"; then
+                printf '%s\n' "$output"
+                echo "::error::crates.io rejected $crate $version; not retrying a permanent error"
+                return 1
+              fi
             done
+            echo "::error::timed out waiting to publish $crate $version"
+            return 1
           }
 
           publish cftool-core
