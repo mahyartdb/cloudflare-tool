@@ -105,6 +105,10 @@ otherwise. The job may be safely re-run: it skips versions already on crates.io.
 - The `crates` job publishes in dependency order:
   `cftool-core` → `cftool-warp` → `cftool-cdn` → `cftool` → `cftool-gui`,
   retrying until each new version is indexed before publishing its dependents.
+- Publishing checks out the verified `main` commit, not the tag: a tag can
+  predate metadata/manifest fixes and packaging from it would omit required
+  fields (e.g. `description`). The `verify` job still rejects any tag whose
+  name disagrees with the `main` manifest version.
 - A publish is permanent: a version can never be overwritten or deleted. Fix a
   broken release with a new version (bump `N`, e.g. `-beta.2`), never a repush.
 - `cargo yank --version X.Y.Z` hides a broken version from new dependency

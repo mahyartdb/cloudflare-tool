@@ -164,8 +164,6 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.verify.outputs.tag }}
       - name: Install Linux GUI dependencies
         run: |
           sudo apt-get update
