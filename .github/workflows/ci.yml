@@ -117,7 +117,7 @@ jobs:
             libfontconfig-dev libwayland-dev libwebkit2gtk-4.1-dev \
             libxkbcommon-x11-dev libx11-xcb-dev libssl-dev libzstd-dev \
             libasound2-dev vulkan-validationlayers libvulkan1
-      - uses: dtolnay/rust-toolchain@1.97
+      - uses: dtolnay/rust-toolchain@1.120
       - uses: Swatinem/rust-cache@v2
       - run: cargo check --workspace --all-targets --all-features --locked
 
