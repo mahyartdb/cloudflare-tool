@@ -79,15 +79,17 @@ out-of-band publishes).
 
 ### Enabling the publish job
 
-The `crates` job is gated by the repository variable `PUBLISH_TO_CRATES_IO`.
-It does nothing until that variable is the string `true`:
+**Standing policy: auto-publish is ON.** The repository variable
+`PUBLISH_TO_CRATES_IO` is set to `true` permanently — every push of a valid
+`v*` tag publishes that version to crates.io automatically as part of the
+Release workflow. Do not toggle it off for routine releases.
 
-```sh
-gh variable set PUBLISH_TO_CRATES_IO --repo mahyartdb/cloudflare-tool --body true
-```
-
-Set it only when you intend the next tag to publish. Leave it unset/`false`
-otherwise. The job may be safely re-run: it skips versions already on crates.io.
+- Check it with `gh variable list --repo mahyartdb/cloudflare-tool`.
+- Because publish is permanent, the pre-tag gates matter more: CI green on the
+  exact commit, tag matches the manifest version, and the version has never
+  been published (the `crates` job skips versions already on crates.io).
+- If a publish must be stopped in an emergency, set the variable to `false`
+  before pushing the tag; there is no undo after the tag is pushed.
 
 ### Manifest requirements (already in place — keep them)
 
