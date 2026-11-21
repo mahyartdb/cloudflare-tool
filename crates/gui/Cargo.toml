@@ -12,7 +12,7 @@ cftool-core = { workspace = true }
 cftool-warp = { workspace = true }
 cftool-cdn = { workspace = true }
 cftool = { workspace = true }
-gpui-kit = "0.9.1"
+gpui-kit = "0.10.0"
 tokio = { workspace = true }
 tokio-util = { workspace = true }
 serde = { workspace = true }
