@@ -16,3 +16,7 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    ignore:
+      # MSRV is a deliberate toolchain pin; "bumps" like 1.97 -> 1.120 break CI
+      # (the version doesn't exist) and defeat the gate's purpose.
+      - dependency-name: "dtolnay/rust-toolchain"
