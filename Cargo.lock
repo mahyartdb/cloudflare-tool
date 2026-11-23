@@ -912,7 +912,7 @@ checksum = "f079e83a288787bcd14a6aea84cee5c87a67c5a3e660c30f557a3d24761b3527"
 
 [[package]]
 name = "cftool"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "anyhow",
  "cftool-cdn",
@@ -931,7 +931,7 @@ dependencies = [
 
 [[package]]
 name = "cftool-cdn"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "anyhow",
  "cftool-core",
@@ -950,7 +950,7 @@ dependencies = [
 
 [[package]]
 name = "cftool-core"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "anyhow",
  "ipnet",
@@ -965,7 +965,7 @@ dependencies = [
 
 [[package]]
 name = "cftool-gui"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "anyhow",
  "cftool",
@@ -982,7 +982,7 @@ dependencies = [
 
 [[package]]
 name = "cftool-warp"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "anyhow",
  "base64 0.23.1",

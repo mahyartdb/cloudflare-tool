@@ -88,6 +88,9 @@ jobs:
         with:
           ref: ${{ needs.verify.outputs.tag }}
           persist-credentials: false
+      - name: Install Linux GUI link libraries
+        if: runner.os == 'Linux'
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends libxcb1-dev libfreetype-dev libxkbcommon-dev libxkbcommon-x11-dev
       - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
         with:
           targets: ${{ matrix.target }}
@@ -173,6 +176,8 @@ jobs:
         with:
           ref: main
           persist-credentials: false
+      - name: Install Linux GUI link libraries
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends libxcb1-dev libfreetype-dev libxkbcommon-dev libxkbcommon-x11-dev
       - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
       - name: Publish crates in dependency order
         env:
